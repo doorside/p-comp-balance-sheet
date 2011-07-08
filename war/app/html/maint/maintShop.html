@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="http://code.jquery.com/mobile/1.0b1/jquery.mobile-1.0b1.min.css" />
+<link rel="stylesheet" href="http://dev.jtsage.com/cdn/datebox/latest/jquery.mobile.datebox.min.css" /> 
+<script src="http://code.jquery.com/jquery-1.6.1.min.js"></script>
+<script>
+    $(document).bind( "mobileinit", function(){ $.mobile.page.prototype.options.degradeInputs.date = 'text'; });	
+</script>
+<script src="http://code.jquery.com/mobile/1.0b1/jquery.mobile-1.0b1.min.js"></script>
+<script src="http://dev.jtsage.com/cdn/datebox/latest/jquery.mobile.datebox.min.js"></script>
+<script src="/app/js/util.js"></script>
+
+<title>店舗選択</title>
+<style>
+
+</style>
+<script>
+jQuery(document).ready(function() {
+	var selectShops = function() {
+        $.mobile.pageLoading();  
+	    jQuery('#shopList').html('');
+		jQuery.getJSON("/resources/shops?jsoncallback=?",
+	        {},
+	        function(rows) {
+	            for (var i = 0, shop; shop = rows[i]; i++){
+	                $('<li>')
+	                .html('<a data-identity="' + shop.id + '" data-url="?id=' + shop.id +'" href="javascript:void(0);">' + shop.name + '</a>')
+	                .appendTo('#shopList');
+	            }
+	            $('#shopList').listview('refresh');
+	            $.mobile.pageLoading(true);		
+	        });
+	};
+	$('div[id="maintListShop"]').live("pageshow", function() {
+		selectShops();
+	});
+	
+	$('div[id="maintListShop"] ul[data-role="listview"] a').live("tap", function() {
+	    //var dataurl = $(this).attr("data-url");
+	    $('#shopId').val($(this).attr("data-identity"));
+	    $.mobile.changePage("#maintShop");
+	    //if (dataurl != null) {
+	    //    $.mobile.changePage("maintShop.htm" + dataurl);
+	   // }
+	});	
+	
+	$('div[id="maintShop"]').live("pageshow", function() {
+        $.mobile.pageLoading();
+    	jQuery.getJSON("/resources/shops/" + $('#shopId').val() + "?jsoncallback=?",
+    	        {},
+    	        function(row) {
+    	        	$('#shopName').val(row.name);
+    	        	$('#shopConversionRatio').val(row.conversionRatio);
+    	            $.mobile.pageLoading(true);		
+    	        }
+    	 );
+	});
+
+	jQuery('#addShop').bind('tap', function() {
+		 $('#shopId').val('');
+		 $('#shopName').val('');
+		 $('#shopConversionRatio').val('');
+	});
+	
+	jQuery('#shopSave').bind('tap', function() {
+		 var shop = { id: $('#shopId').val(),
+		 name : $('#shopName').val(),
+		 conversionRatio : $('#shopConversionRatio').val()};
+		if (shop.id) {
+			updateShop(shop);
+		} else {
+			insertShop(shop);
+		}
+	});
+	jQuery('#shopDelete').bind('tap', function() {
+		deleteShop({id: $('#shopId').val()});
+	});
+});
+var insertShop = function(shop) {
+    $.mobile.pageLoading();  
+
+    jQuery.ajax({ 
+        url: "/resources/shops",
+        type: "POST",
+        contentType: 'application/json',
+        dataType: 'json',
+        data:JSON.stringify({
+        	"name":shop.name,
+        	"conversionRatio":shop.conversionRatio
+  	  	}),
+        success: function(data, dataType) {
+   			$('#shopId').val(data.id);
+   	        $.mobile.pageLoading(true);		
+        	$.mobile.changePage( "#shopMsgDialog", {
+        		transition: "pop",
+        		reverse: false,
+        		changeHash: false
+        	});	
+        },
+        error:function (result) {
+        	alert(result);
+            $.mobile.pageLoading(true);		
+        } 
+    });
+};
+
+var updateShop = function(shop) {
+    $.mobile.pageLoading();  
+
+    jQuery.ajax({ 
+	    url:"/resources/shops/" + shop.id,
+	    type: "PUT",
+	    contentType: 'application/json',
+	    dataType: 'json',
+	    data:JSON.stringify({
+        	"name":shop.name,
+        	"conversionRatio":shop.conversionRatio
+		}),
+        success: function(data, dataType) {
+            $.mobile.pageLoading(true);		
+        	console.dir(data);
+        	$.mobile.changePage( "#shopMsgDialog", {
+        		transition: "pop",
+        		reverse: false,
+        		changeHash: false
+        	});	
+        },
+        error:function (result) {
+        	alert(result);
+            $.mobile.pageLoading(true);		
+        } 
+    });
+};
+
+var deleteShop = function(shop) {
+    $.mobile.pageLoading();  
+
+    jQuery.ajax({ 
+	    url:"/resources/shops/" + shop.id,
+	    type: "DELETE",
+	    contentType: 'application/json',
+	    dataType: 'json',
+	    data:{},
+        success: function(data, dataType) {
+            $.mobile.pageLoading(true);		
+    		console.dir(data);
+        	$.mobile.changePage( "#shopMsgDialog", {
+        		transition: "pop",
+        		reverse: false,
+        		changeHash: false
+        	});	
+        },
+        error:function (result) {
+            $.mobile.pageLoading(true);		
+    		alert(result);
+        } 
+    });
+};
+
+</script>
+</head>
+<body>
+
+<div data-role="page" id="maintListShop">
+    <div data-role="header" data-position="fixed" >
+		<a class="ui-btn-left" href="../start.html#maint" data-direction="reverse" rel="external">Back</a>
+    	<H1>店舗一覧</h1>
+		<a class="ui-btn-right" href="#maintShop" data-icon="plus" id="addShop">Add</a>
+    </div><!-- /header -->
+    <div data-role="content">
+		<fieldset data-role="fieldcontain">
+	    	<ul id="shopList" data-role="listview" ></ul>
+	    </fieldset>
+    </div><!-- /content -->
+</div><!-- /page -->
+<div data-role="page" id="maintShop" data-add-back-btn="true">
+	<div data-role="header">
+		<a class="ui-btn-left" href="#maintListShop" data-direction="reverse">Back</a>
+		<h1>店舗メンテ</h1>
+	</div><!-- /header -->
+	<div data-role="content">	
+		<fieldset data-role="fieldcontain">
+			<input type="hidden"  id="shopId">
+	    	<input type="text" placeholder="名前" id="shopName">
+	    	<input type="text" placeholder="換金率" id="shopConversionRatio">
+		</fieldset>
+		<fieldset class="ui-grid-a">
+      		<a data-role="button" id="shopSave">save</a>
+      		<a data-role="button" id="shopDelete">delete</a>
+		</fieldset>
+	</div><!-- /content -->
+</div><!-- /page --> 
+<div id="shopMsgDialog" data-role="page">
+  <div data-role="header">
+  	<h1>message</h1>
+  </div>
+  <div data-role="content" class="content">
+    <p>完了</p>
+		<fieldset class="ui-grid-a">
+      		<a data-role="button" data-rel="back">back</a>
+		</fieldset>
+  </div>
+  <!-- 
+  <footer data-role="footer"><h1></h1></footer>
+   -->
+</div>
+</body>
+</html>
