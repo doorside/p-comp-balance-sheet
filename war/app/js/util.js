@@ -12,3 +12,4 @@ function getParameterByName(name, inputstring) {
 jQuery(document).bind("mobileinit", function() {
     //jQuery.mobile.page.prototype.options.addBackBtn = true;
 });
+

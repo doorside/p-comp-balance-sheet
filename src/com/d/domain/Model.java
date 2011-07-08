@@ -14,9 +14,12 @@ public class Model {
 	@Persistent
 	private String name;
 	@Persistent
-	private Maker maker;
+	private Long makerId;
+
+	private String makerName;
 	@Persistent
-	private ModelType type;
+	private Long modelTypeId;
+	private String modelTypeName;
 
 	public Long getId() {
 		return id;
@@ -34,19 +37,36 @@ public class Model {
 		this.name = name;
 	}
 
-	public Maker getMaker() {
-		return maker;
+	public Long getMakerId() {
+		return makerId;
 	}
 
-	public void setMaker(Maker maker) {
-		this.maker = maker;
+	public void setMakerId(Long makerId) {
+		this.makerId = makerId;
 	}
 
-	public ModelType getType() {
-		return type;
+	public Long getModelTypeId() {
+		return modelTypeId;
 	}
 
-	public void setType(ModelType type) {
-		this.type = type;
+	public void setModelTypeId(Long typeId) {
+		this.modelTypeId = typeId;
 	}
+
+	public String getModelTypeName() {
+		return modelTypeName;
+	}
+
+	public void setModelTypeName(String typeName) {
+		this.modelTypeName = typeName;
+	}
+
+	public String getMakerName() {
+		return makerName;
+	}
+
+	public void setMakerName(String makerName) {
+		this.makerName = makerName;
+	}
+
 }

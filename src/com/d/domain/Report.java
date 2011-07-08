@@ -16,9 +16,13 @@ public class Report {
 	@Persistent
 	private Date date;
 	@Persistent
-	private Shop shop;
+	private Long shopId;
+
+	private String shopName;
 	@Persistent
-	private Model model;
+	private Long modelId;
+	private String modelName;
+
 	/** 投資金額 */
 	@Persistent
 	private Long investment;
@@ -45,22 +49,6 @@ public class Report {
 		this.date = date;
 	}
 
-	public Shop getShop() {
-		return shop;
-	}
-
-	public void setShop(Shop shop) {
-		this.shop = shop;
-	}
-
-	public Model getModel() {
-		return model;
-	}
-
-	public void setModel(Model model) {
-		this.model = model;
-	}
-
 	public Long getInvestment() {
 		return investment;
 	}
@@ -83,5 +71,37 @@ public class Report {
 
 	public void setNumOfPeople(Integer numOfPeople) {
 		this.numOfPeople = numOfPeople;
+	}
+
+	public Long getShopId() {
+		return shopId;
+	}
+
+	public void setShopId(Long shopId) {
+		this.shopId = shopId;
+	}
+
+	public Long getModelId() {
+		return modelId;
+	}
+
+	public void setModelId(Long modelId) {
+		this.modelId = modelId;
+	}
+
+	public String getShopName() {
+		return shopName;
+	}
+
+	public void setShopName(String shopName) {
+		this.shopName = shopName;
+	}
+
+	public String getModelName() {
+		return modelName;
+	}
+
+	public void setModelName(String modelName) {
+		this.modelName = modelName;
 	}
 }

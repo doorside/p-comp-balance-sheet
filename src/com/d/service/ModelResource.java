@@ -17,7 +17,9 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 
 import com.d.dao.DAO;
+import com.d.domain.Maker;
 import com.d.domain.Model;
+import com.d.domain.ModelType;
 import com.sun.jersey.api.json.JSONWithPadding;
 
 @Path("/models")
@@ -33,6 +35,19 @@ public class ModelResource {
 		log.info("get:" + id);
 		DAO dao = new DAO();
 		Model model = dao.select(Model.class, id);
+		if (model.getMakerId() != null) {
+			Maker maker = dao.select(Maker.class, model.getMakerId());
+			if (maker != null) {
+				model.setMakerName(maker.getName());
+			}
+		}
+		if (model.getModelTypeId() != null) {
+			ModelType modelType = dao.select(ModelType.class,
+					model.getModelTypeId());
+			if (modelType != null) {
+				model.setModelTypeName(modelType.getName());
+			}
+		}
 		return new JSONWithPadding(model, callback);
 	}
 

@@ -23,9 +23,14 @@ jQuery(document).ready(function() {
 	var selectModels = function() {
         $.mobile.pageLoading();  
 	    jQuery('#modelList').html('');
-		jQuery.getJSON("/resources/models?jsoncallback=?",
-	        {},
-	        function(rows) {
+	    
+	    jQuery.ajax({ 
+	        url: "/resources/models?jsoncallback=?",
+	        type: "GET",
+	        contentType: 'application/json',
+	        dataType: 'json',
+	        data:{},
+	        success: function(rows, dataType) {
 	            for (var i = 0, model; model = rows[i]; i++){
 	                $('<li>')
 	                .html('<a data-identity="' + model.id + '" data-url="?id=' + model.id +'" href="javascript:void(0);">' + model.name + '</a>')
@@ -33,9 +38,15 @@ jQuery(document).ready(function() {
 	            }
 	            $('#modelList').listview('refresh');
 	            $.mobile.pageLoading(true);		
-	        });
+	        },
+	        error:function (result) {
+	        	alert(JSON.stringify(result));
+	            $.mobile.pageLoading(true);		
+	        } 
+	    });
 	};
 	$('div[id="maintListModel"]').live("pageshow", function() {
+		$('#selectMaker').data('no-reflesh', false);
 		selectModels();
 	});
 	
@@ -49,12 +60,18 @@ jQuery(document).ready(function() {
 	});	
 	
 	$('div[id="maintModel"]').live("pageshow", function() {
+        if ($('#selectMaker').data('no-reflesh') === true) {
+        	return;
+        }
         $.mobile.pageLoading();
     	jQuery.getJSON("/resources/models/" + $('#modelId').val() + "?jsoncallback=?",
     	        {},
     	        function(row) {
     	        	$('#modelName').val(row.name);
-    	        	$('#modelConversionRatio').val(row.conversionRatio);
+    	        	$("#makerId").val(row.makerId);
+    	        	$("#makerName").text(row.makerName);
+    	        	$("#modelTypeId").val(row.modelTypeId);
+    	        	$("#modelTypeName").text(row.modelTypeName);
     	            $.mobile.pageLoading(true);		
     	        }
     	 );
@@ -63,13 +80,18 @@ jQuery(document).ready(function() {
 	jQuery('#addModel').bind('tap',function() {
 		 $('#modelId').val('');
 		 $('#modelName').val('');
-		 $('#modelConversionRatio').val('');
+		 $('#makerId').val('');
+		 $('#makerName').text('メーカー');
+		 $('#modelTypeId').val('');
+		 $('#modelTypeName').val('タイプ');
 	});
 	
 	jQuery('#modelSave').bind('tap', function() {
-		 var model = { id: $('#modelId').val(),
+		var model = { id: $('#modelId').val(),
 		 name : $('#modelName').val(),
-		 conversionRatio : $('#modelConversionRatio').val()};
+		 makerId : $('#makerId').val(),
+		 modelTypeId : $('#modelTypeId').val()
+		 };
 		if (model.id) {
 			updateModel(model);
 		} else {
@@ -79,7 +101,80 @@ jQuery(document).ready(function() {
 	jQuery('#modelDelete').bind('tap',function() {
 		deleteModel({id: $('#modelId').val()});
 	});
+
+
+
+	var selectMakers = function() {
+        $.mobile.pageLoading();  
+	    jQuery('#makerList').html('');
+		jQuery.getJSON("/resources/makers?jsoncallback=?",
+	        {},
+	        function(rows) {
+	            for (var i = 0, maker; maker = rows[i]; i++){
+	                $('<li>')
+	                .html('<a data-identity="' + maker.id + '" data-url="?id=' + maker.id +'" href="javascript:void(0);">' + maker.name + '</a>')
+	                .appendTo('#makerList');
+	            }
+	            $('#makerList').listview('refresh');
+	            $.mobile.pageLoading(true);		
+	        });
+	};
+	$('div[id="selectMaker"]').live("pageshow", function() {
+		selectMakers();
+	});
+
+	$('div[id="selectMaker"] ul[data-role="listview"] a').live("tap", function() {
+		$('#selectMaker').data('no-reflesh', true);
+	    //var dataurl = $(this).attr("data-url");
+	    var $this = $(this);
+	    $('#makerId').val($this.attr("data-identity"));
+	    $('#makerName').text($this.text());
+	    $.mobile.changePage("#maintModel", {reverse : true});
+	    //if (dataurl != null) {
+	    //    $.mobile.changePage("maintMaker.htm" + dataurl);
+	   // }
+	});	
+
+	
+	var selectModelTypes = function() {
+        $.mobile.pageLoading();  
+	    jQuery('#modelTypeList').html('');
+		jQuery.getJSON("/resources/modelTypes?jsoncallback=?",
+	        {},
+	        function(rows) {
+	            for (var i = 0, modelType; modelType = rows[i]; i++){
+	                $('<li>')
+	                .html('<a data-identity="' + modelType.id + '" data-url="?id=' + modelType.id +'" href="javascript:void(0);">' + modelType.name + '</a>')
+	                .appendTo('#modelTypeList');
+	            }
+	            $('#modelTypeList').listview('refresh');
+	            $.mobile.pageLoading(true);		
+	        });
+	};
+	$('div[id="selectModelType"]').live("pageshow", function() {
+		selectModelTypes();
+	});
+
+	$('div[id="selectModelType"] ul[data-role="listview"] a').live("tap", function() {
+		$('#selectMaker').data('no-reflesh', true);
+	    //var dataurl = $(this).attr("data-url");
+	    var $this = $(this);
+	    $('#modelTypeId').val($this.attr("data-identity"));
+	    $('#modelTypeName').text($this.text());
+	    $.mobile.changePage("#maintModel", {reverse : true});
+	    //if (dataurl != null) {
+	    //    $.mobile.changePage("maintModelType.htm" + dataurl);
+	   // }
+	});	
+
 });
+
+
+
+
+
+
+
 var insertModel = function(model) {
     $.mobile.pageLoading();  
 
@@ -90,7 +185,8 @@ var insertModel = function(model) {
         dataType: 'json',
         data:JSON.stringify({
         	"name":model.name,
-        	"conversionRatio":model.conversionRatio
+        	"makerId":model.makerId,
+        	"modelTypeId":model.modelTypeId
   	  	}),
         success: function(data, dataType) {
    			$('#modelId').val(data.id);
@@ -118,7 +214,8 @@ var updateModel = function(model) {
 	    dataType: 'json',
 	    data:JSON.stringify({
         	"name":model.name,
-        	"conversionRatio":model.conversionRatio
+        	"makerId":model.makerId,
+        	"modelTypeId":model.modelTypeId
 		}),
         success: function(data, dataType) {
             $.mobile.pageLoading(true);		
@@ -159,6 +256,10 @@ var deleteModel = function(model) {
     		alert(result);
         } 
     });
+    
+    
+    
+
 };
 
 </script>
@@ -185,14 +286,44 @@ var deleteModel = function(model) {
 		<fieldset data-role="fieldcontain">
 			<input type="hidden"  id="modelId">
 	    	<input type="text" placeholder="名前" id="modelName">
-	    	<input type="text" placeholder="換金率" id="modelConversionRatio">
 		</fieldset>
+		<input type="hidden" id="makerId" />
+		<input type="hidden" id="modelTypeId" />
+		<ul data-role="listview" data-inset="true">
+			<li><a href="#selectMaker" id="makerName">メーカー</a></li>
+			<li><a href="#selectModelType" id="modelTypeName">型</a></li>
+		</ul>
+		
 		<fieldset class="ui-grid-a">
       		<a data-role="button" id="modelSave">save</a>
       		<a data-role="button" id="modelDelete">delete</a>
 		</fieldset>
 	</div><!-- /content -->
 </div><!-- /page --> 
+<div data-role="page" id="selectMaker" data-add-back-btn="true">
+	<div data-role="header">
+		<a class="ui-btn-left" href="#maintModel" data-direction="reverse">Back</a>
+		<h1>メーカー選択</h1>
+	</div><!-- /header -->
+	<div data-role="content">	
+		<fieldset data-role="fieldcontain">
+	    	<ul id="makerList" data-role="listview" ></ul>
+	    </fieldset>
+	</div><!-- /content -->
+</div><!-- /page --> 
+
+<div data-role="page" id="selectModelType" data-add-back-btn="true">
+	<div data-role="header">
+		<a class="ui-btn-left" href="#maintModel" data-direction="reverse">Back</a>
+		<h1>タイプ選択</h1>
+	</div><!-- /header -->
+	<div data-role="content">	
+		<fieldset data-role="fieldcontain">
+	    	<ul id="modelTypeList" data-role="listview" ></ul>
+	    </fieldset>
+	</div><!-- /content -->
+</div><!-- /page --> 
+
 <div id="modelMsgDialog" data-role="page">
   <div data-role="header">
   	<h1>message</h1>
@@ -200,12 +331,9 @@ var deleteModel = function(model) {
   <div data-role="content" class="content">
     <p>完了</p>
 		<fieldset class="ui-grid-a">
-      		<a data-role="button" data-rel="back">back</a>
+			<a class="ui-btn-left" href="#maintListModel" data-direction="reverse">Back</a>
 		</fieldset>
   </div>
-  <!-- 
-  <footer data-role="footer"><h1></h1></footer>
-   -->
 </div>
 </body>
 </html>
