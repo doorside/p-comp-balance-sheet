@@ -1,26 +1,26 @@
 package com.d.domain;
 
-import javax.jdo.annotations.IdGeneratorStrategy;
-import javax.jdo.annotations.IdentityType;
-import javax.jdo.annotations.PersistenceCapable;
-import javax.jdo.annotations.Persistent;
-import javax.jdo.annotations.PrimaryKey;
+import com.d.model.ShopModel;
 
-@PersistenceCapable(identityType = IdentityType.APPLICATION)
 public class Shop {
-	@PrimaryKey
-	@Persistent(valueStrategy = IdGeneratorStrategy.IDENTITY)
-	private Long id;
-	@Persistent
+	private long id;
 	private String name;
-	@Persistent
-	private Integer conversionRatio;
+	private long conversionRatio;
 
-	public Long getId() {
+	public Shop() {
+	}
+
+	public Shop(ShopModel shopModel) {
+		this.id = shopModel.getId().getId();
+		this.name = shopModel.getName();
+		this.conversionRatio = shopModel.getConversionRatio();
+	}
+
+	public long getId() {
 		return id;
 	}
 
-	public void setId(Long id) {
+	public void setId(long id) {
 		this.id = id;
 	}
 
@@ -32,11 +32,11 @@ public class Shop {
 		this.name = name;
 	}
 
-	public Integer getConversionRatio() {
+	public long getConversionRatio() {
 		return conversionRatio;
 	}
 
-	public void setConversionRatio(Integer conversionRatio) {
+	public void setConversionRatio(long conversionRatio) {
 		this.conversionRatio = conversionRatio;
 	}
 }

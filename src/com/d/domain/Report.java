@@ -2,36 +2,44 @@ package com.d.domain;
 
 import java.util.Date;
 
-import javax.jdo.annotations.IdGeneratorStrategy;
-import javax.jdo.annotations.IdentityType;
-import javax.jdo.annotations.PersistenceCapable;
 import javax.jdo.annotations.Persistent;
-import javax.jdo.annotations.PrimaryKey;
 
-@PersistenceCapable(identityType = IdentityType.APPLICATION)
+import com.d.model.ReportModel;
+
 public class Report {
-	@PrimaryKey
-	@Persistent(valueStrategy = IdGeneratorStrategy.IDENTITY)
+
 	private Long id;
-	@Persistent
+
 	private Date date;
-	@Persistent
+
 	private Long shopId;
 
 	private String shopName;
-	@Persistent
+
 	private Long modelId;
 	private String modelName;
-
 	/** 投資金額 */
-	@Persistent
 	private Long investment;
 	/** 換金金額 */
-	@Persistent
 	private Long realization;
 
 	@Persistent
 	private Integer numOfPeople;
+
+	public Report() {
+	}
+
+	public Report(ReportModel reportModel) {
+		this.id = reportModel.getId().getId();
+		this.date = reportModel.getDate();
+		this.shopId = reportModel.getShopId();
+		this.shopName = reportModel.getShopName();
+		this.modelId = reportModel.getModelId();
+		this.modelName = reportModel.getModelName();
+		this.investment = reportModel.getInvestment();
+		this.realization = reportModel.getRealization();
+		this.numOfPeople = reportModel.getNumOfPeople();
+	}
 
 	public Long getId() {
 		return id;

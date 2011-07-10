@@ -1,5 +1,6 @@
 package com.d.service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -16,10 +17,14 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 
-import com.d.dao.DAO;
-import com.d.domain.Maker;
+import org.slim3.datastore.Datastore;
+
 import com.d.domain.Model;
-import com.d.domain.ModelType;
+import com.d.meta.ModelModelMeta;
+import com.d.model.MakerModel;
+import com.d.model.ModelModel;
+import com.d.model.SpecModel;
+import com.google.appengine.api.datastore.Key;
 import com.sun.jersey.api.json.JSONWithPadding;
 
 @Path("/models")
@@ -33,19 +38,27 @@ public class ModelResource {
 	public JSONWithPadding get(@PathParam("id") Long id,
 			@QueryParam("jsoncallback") @DefaultValue("fn") String callback) {
 		log.info("get:" + id);
-		DAO dao = new DAO();
-		Model model = dao.select(Model.class, id);
-		if (model.getMakerId() != null) {
-			Maker maker = dao.select(Maker.class, model.getMakerId());
-			if (maker != null) {
-				model.setMakerName(maker.getName());
+		Key key = Datastore.createKey(ModelModel.class, id);
+		ModelModel modelModel = Datastore.get(ModelModel.class, key);
+		Model model = new Model();
+		model.setId(modelModel.getId().getId());
+		model.setName(modelModel.getName());
+		if (modelModel.getMakerId() != null) {
+			Key makerKey = Datastore.createKey(MakerModel.class,
+					modelModel.getMakerId());
+			MakerModel makerModel = Datastore.get(MakerModel.class, makerKey);
+			if (makerModel != null) {
+				model.setMakerId(makerModel.getId().getId());
+				model.setMakerName(makerModel.getName());
 			}
 		}
-		if (model.getModelTypeId() != null) {
-			ModelType modelType = dao.select(ModelType.class,
-					model.getModelTypeId());
-			if (modelType != null) {
-				model.setModelTypeName(modelType.getName());
+		if (modelModel.getSpecId() != null) {
+			Key specKey = Datastore.createKey(SpecModel.class,
+					modelModel.getSpecId());
+			SpecModel specModel = Datastore.get(SpecModel.class, specKey);
+			if (specModel != null) {
+				model.setMakerId(specModel.getId().getId());
+				model.setMakerName(specModel.getName());
 			}
 		}
 		return new JSONWithPadding(model, callback);
@@ -56,8 +69,38 @@ public class ModelResource {
 	public JSONWithPadding list(
 			@QueryParam("jsoncallback") @DefaultValue("fn") String callback) {
 		log.info("get all.");
-		DAO dao = new DAO();
-		List<Model> modelList = dao.selectAll(Model.class);
+		List<Model> modelList = new ArrayList<Model>();
+
+		ModelModelMeta meta = ModelModelMeta.get();
+		List<ModelModel> modelModelList = Datastore.query(meta).asList();
+		if (modelModelList != null) {
+			for (ModelModel modelModel : modelModelList) {
+				Model model = new Model();
+				model.setId(modelModel.getId().getId());
+				model.setName(modelModel.getName());
+				if (modelModel.getMakerId() != null) {
+					Key makerKey = Datastore.createKey(MakerModel.class,
+							modelModel.getMakerId());
+					MakerModel makerModel = Datastore.get(MakerModel.class,
+							makerKey);
+					if (makerModel != null) {
+						model.setMakerId(makerModel.getId().getId());
+						model.setMakerName(makerModel.getName());
+					}
+				}
+				if (modelModel.getSpecId() != null) {
+					Key specKey = Datastore.createKey(SpecModel.class,
+							modelModel.getSpecId());
+					SpecModel specModel = Datastore.get(SpecModel.class,
+							specKey);
+					if (specModel != null) {
+						model.setMakerId(specModel.getId().getId());
+						model.setMakerName(specModel.getName());
+					}
+				}
+				modelList.add(model);
+			}
+		}
 		return new JSONWithPadding(new GenericEntity<List<Model>>(modelList) {/* ignore */
 		}, callback);
 	}
@@ -66,8 +109,11 @@ public class ModelResource {
 	@Consumes({ MediaType.APPLICATION_JSON })
 	public Model createModel(Model model) {
 		log.info("post:" + model.getName());
-		DAO dao = new DAO();
-		dao.save(model);
+		ModelModel modelModel = new ModelModel();
+		modelModel.setName(model.getName());
+		modelModel.setMakerId(model.getMakerId());
+		modelModel.setSpecId(model.getSpecId());
+		Datastore.put(modelModel);
 		return model;
 	}
 
@@ -76,9 +122,10 @@ public class ModelResource {
 	@Consumes({ MediaType.APPLICATION_JSON })
 	public void update(@PathParam("id") Long id, Model model) {
 		log.info("put:" + id + " " + model.getName());
-		DAO dao = new DAO();
-		model.setId(id);
-		dao.save(model);
+		Key key = Datastore.createKey(ModelModel.class, id);
+		ModelModel modelModel = Datastore.get(ModelModel.class, key);
+		modelModel.setName(model.getName());
+		Datastore.put(modelModel);
 	}
 
 	@DELETE
@@ -86,7 +133,6 @@ public class ModelResource {
 	@Consumes({ MediaType.APPLICATION_JSON })
 	public void delete(@PathParam("id") Long id) {
 		log.info("delete:" + id);
-		DAO dao = new DAO();
-		dao.delete(Model.class, id);
+		Datastore.delete(Datastore.createKey(ModelModel.class, id));
 	}
 }

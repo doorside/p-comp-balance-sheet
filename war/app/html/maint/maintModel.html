@@ -4,13 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="http://code.jquery.com/mobile/1.0b1/jquery.mobile-1.0b1.min.css" />
-<link rel="stylesheet" href="http://dev.jtsage.com/cdn/datebox/latest/jquery.mobile.datebox.min.css" /> 
 <script src="http://code.jquery.com/jquery-1.6.1.min.js"></script>
-<script>
-    $(document).bind( "mobileinit", function(){ $.mobile.page.prototype.options.degradeInputs.date = 'text'; });	
-</script>
 <script src="http://code.jquery.com/mobile/1.0b1/jquery.mobile-1.0b1.min.js"></script>
-<script src="http://dev.jtsage.com/cdn/datebox/latest/jquery.mobile.datebox.min.js"></script>
 <script src="/app/js/util.js"></script>
 
 <title>機種選択</title>
@@ -70,8 +65,8 @@ jQuery(document).ready(function() {
     	        	$('#modelName').val(row.name);
     	        	$("#makerId").val(row.makerId);
     	        	$("#makerName").text(row.makerName);
-    	        	$("#modelTypeId").val(row.modelTypeId);
-    	        	$("#modelTypeName").text(row.modelTypeName);
+    	        	$("#specId").val(row.specId);
+    	        	$("#specName").text(row.specName);
     	            $.mobile.pageLoading(true);		
     	        }
     	 );
@@ -82,15 +77,15 @@ jQuery(document).ready(function() {
 		 $('#modelName').val('');
 		 $('#makerId').val('');
 		 $('#makerName').text('メーカー');
-		 $('#modelTypeId').val('');
-		 $('#modelTypeName').val('タイプ');
+		 $('#specId').val('');
+		 $('#specName').val('タイプ');
 	});
 	
 	jQuery('#modelSave').bind('tap', function() {
 		var model = { id: $('#modelId').val(),
 		 name : $('#modelName').val(),
 		 makerId : $('#makerId').val(),
-		 modelTypeId : $('#modelTypeId').val()
+		 specId : $('#specId').val()
 		 };
 		if (model.id) {
 			updateModel(model);
@@ -136,34 +131,34 @@ jQuery(document).ready(function() {
 	});	
 
 	
-	var selectModelTypes = function() {
+	var selectSpecs = function() {
         $.mobile.pageLoading();  
-	    jQuery('#modelTypeList').html('');
-		jQuery.getJSON("/resources/modelTypes?jsoncallback=?",
+	    jQuery('#specList').html('');
+		jQuery.getJSON("/resources/specs?jsoncallback=?",
 	        {},
 	        function(rows) {
-	            for (var i = 0, modelType; modelType = rows[i]; i++){
+	            for (var i = 0, spec; spec = rows[i]; i++){
 	                $('<li>')
-	                .html('<a data-identity="' + modelType.id + '" data-url="?id=' + modelType.id +'" href="javascript:void(0);">' + modelType.name + '</a>')
-	                .appendTo('#modelTypeList');
+	                .html('<a data-identity="' + spec.id + '" data-url="?id=' + spec.id +'" href="javascript:void(0);">' + spec.name + '</a>')
+	                .appendTo('#specList');
 	            }
-	            $('#modelTypeList').listview('refresh');
+	            $('#specList').listview('refresh');
 	            $.mobile.pageLoading(true);		
 	        });
 	};
-	$('div[id="selectModelType"]').live("pageshow", function() {
-		selectModelTypes();
+	$('div[id="selectSpec"]').live("pageshow", function() {
+		selectSpecs();
 	});
 
-	$('div[id="selectModelType"] ul[data-role="listview"] a').live("tap", function() {
+	$('div[id="selectSpec"] ul[data-role="listview"] a').live("tap", function() {
 		$('#selectMaker').data('no-reflesh', true);
 	    //var dataurl = $(this).attr("data-url");
 	    var $this = $(this);
-	    $('#modelTypeId').val($this.attr("data-identity"));
-	    $('#modelTypeName').text($this.text());
+	    $('#specId').val($this.attr("data-identity"));
+	    $('#specName').text($this.text());
 	    $.mobile.changePage("#maintModel", {reverse : true});
 	    //if (dataurl != null) {
-	    //    $.mobile.changePage("maintModelType.htm" + dataurl);
+	    //    $.mobile.changePage("maintSpec.htm" + dataurl);
 	   // }
 	});	
 
@@ -186,7 +181,7 @@ var insertModel = function(model) {
         data:JSON.stringify({
         	"name":model.name,
         	"makerId":model.makerId,
-        	"modelTypeId":model.modelTypeId
+        	"specId":model.specId
   	  	}),
         success: function(data, dataType) {
    			$('#modelId').val(data.id);
@@ -215,7 +210,7 @@ var updateModel = function(model) {
 	    data:JSON.stringify({
         	"name":model.name,
         	"makerId":model.makerId,
-        	"modelTypeId":model.modelTypeId
+        	"specId":model.specId
 		}),
         success: function(data, dataType) {
             $.mobile.pageLoading(true);		
@@ -288,10 +283,10 @@ var deleteModel = function(model) {
 	    	<input type="text" placeholder="名前" id="modelName">
 		</fieldset>
 		<input type="hidden" id="makerId" />
-		<input type="hidden" id="modelTypeId" />
+		<input type="hidden" id="specId" />
 		<ul data-role="listview" data-inset="true">
 			<li><a href="#selectMaker" id="makerName">メーカー</a></li>
-			<li><a href="#selectModelType" id="modelTypeName">型</a></li>
+			<li><a href="#selectSpec" id="specName">型</a></li>
 		</ul>
 		
 		<fieldset class="ui-grid-a">
@@ -312,14 +307,14 @@ var deleteModel = function(model) {
 	</div><!-- /content -->
 </div><!-- /page --> 
 
-<div data-role="page" id="selectModelType" data-add-back-btn="true">
+<div data-role="page" id="selectSpec" data-add-back-btn="true">
 	<div data-role="header">
 		<a class="ui-btn-left" href="#maintModel" data-direction="reverse">Back</a>
 		<h1>タイプ選択</h1>
 	</div><!-- /header -->
 	<div data-role="content">	
 		<fieldset data-role="fieldcontain">
-	    	<ul id="modelTypeList" data-role="listview" ></ul>
+	    	<ul id="specList" data-role="listview" ></ul>
 	    </fieldset>
 	</div><!-- /content -->
 </div><!-- /page --> 

@@ -19,14 +19,15 @@ import javax.ws.rs.core.MediaType;
 
 import org.slim3.datastore.Datastore;
 
-import com.d.domain.Maker;
-import com.d.meta.MakerModelMeta;
-import com.d.model.MakerModel;
+import com.d.dao.DAO;
+import com.d.domain.Spec;
+import com.d.meta.SpecModelMeta;
+import com.d.model.SpecModel;
 import com.google.appengine.api.datastore.Key;
 import com.sun.jersey.api.json.JSONWithPadding;
 
-@Path("/makers")
-public class MakerResource {
+@Path("/specs")
+public class SpecResource {
 	/** ログクラス */
 	private Logger log = Logger.getLogger(this.getClass().getName());
 
@@ -36,10 +37,10 @@ public class MakerResource {
 	public JSONWithPadding get(@PathParam("id") Long id,
 			@QueryParam("jsoncallback") @DefaultValue("fn") String callback) {
 		log.info("get:" + id);
-		Key key = Datastore.createKey(MakerModel.class, id);
-		MakerModel makerModel = Datastore.get(MakerModel.class, key);
-		Maker maker = new Maker(makerModel);
-		return new JSONWithPadding(maker, callback);
+		Key key = Datastore.createKey(SpecModel.class, id);
+		SpecModel specModel = Datastore.get(SpecModel.class, key);
+		Spec spec = new Spec(specModel);
+		return new JSONWithPadding(spec, callback);
 	}
 
 	@GET
@@ -47,38 +48,38 @@ public class MakerResource {
 	public JSONWithPadding list(
 			@QueryParam("jsoncallback") @DefaultValue("fn") String callback) {
 		log.info("get all.");
-		List<Maker> makerList = new ArrayList<Maker>();
+		List<Spec> specList = new ArrayList<Spec>();
 
-		MakerModelMeta meta = MakerModelMeta.get();
-		List<MakerModel> makerModelList = Datastore.query(meta).asList();
-		if (makerModelList != null) {
-			for (MakerModel makerModel : makerModelList) {
-				makerList.add(new Maker(makerModel));
+		SpecModelMeta meta = SpecModelMeta.get();
+		List<SpecModel> specModelList = Datastore.query(meta).asList();
+		if (specModelList != null) {
+			for (SpecModel specModel : specModelList) {
+				specList.add(new Spec(specModel));
 			}
 		}
-		return new JSONWithPadding(new GenericEntity<List<Maker>>(makerList) {/* ignore */
+		return new JSONWithPadding(new GenericEntity<List<Spec>>(specList) {/* ignore */
 		}, callback);
 	}
 
 	@POST
 	@Consumes({ MediaType.APPLICATION_JSON })
-	public Maker createMaker(Maker maker) {
-		log.info("post:" + maker.getName());
-		MakerModel makerModel = new MakerModel();
-		makerModel.setName(maker.getName());
-		Datastore.put(makerModel);
-		return maker;
+	public Spec createModelType(Spec spec) {
+		log.info("post:" + spec.getName());
+		SpecModel specModel = new SpecModel();
+		specModel.setName(spec.getName());
+		Datastore.put(specModel);
+		return spec;
 	}
 
 	@PUT
 	@Path("{id}")
 	@Consumes({ MediaType.APPLICATION_JSON })
-	public void update(@PathParam("id") Long id, Maker maker) {
-		log.info("put:" + id + " " + maker.getName());
-		Key key = Datastore.createKey(MakerModel.class, id);
-		MakerModel makerModel = Datastore.get(MakerModel.class, key);
-		makerModel.setName(maker.getName());
-		Datastore.put(makerModel);
+	public void update(@PathParam("id") Long id, Spec spec) {
+		log.info("put:" + id + " " + spec.getName());
+		Key key = Datastore.createKey(SpecModel.class, id);
+		SpecModel specModel = Datastore.get(SpecModel.class, key);
+		specModel.setName(spec.getName());
+		Datastore.put(specModel);
 	}
 
 	@DELETE
@@ -86,6 +87,7 @@ public class MakerResource {
 	@Consumes({ MediaType.APPLICATION_JSON })
 	public void delete(@PathParam("id") Long id) {
 		log.info("delete:" + id);
-		Datastore.delete(Datastore.createKey(MakerModel.class, id));
+		DAO dao = new DAO();
+		Datastore.delete(Datastore.createKey(SpecModel.class, id));
 	}
 }

@@ -1,5 +1,6 @@
 package com.d.service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -16,8 +17,12 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 
-import com.d.dao.DAO;
+import org.slim3.datastore.Datastore;
+
 import com.d.domain.Report;
+import com.d.meta.ReportModelMeta;
+import com.d.model.ReportModel;
+import com.google.appengine.api.datastore.Key;
 import com.sun.jersey.api.json.JSONWithPadding;
 
 @Path("/reports")
@@ -31,8 +36,9 @@ public class ReportResource {
 	public JSONWithPadding get(@PathParam("id") Long id,
 			@QueryParam("jsoncallback") @DefaultValue("fn") String callback) {
 		log.info("get:" + id);
-		DAO dao = new DAO();
-		Report report = dao.select(Report.class, id);
+		Key key = Datastore.createKey(ReportModel.class, id);
+		ReportModel reportModel = Datastore.get(ReportModel.class, key);
+		Report report = new Report(reportModel);
 		return new JSONWithPadding(report, callback);
 	}
 
@@ -41,8 +47,15 @@ public class ReportResource {
 	public JSONWithPadding list(
 			@QueryParam("jsoncallback") @DefaultValue("fn") String callback) {
 		log.info("get all.");
-		DAO dao = new DAO();
-		List<Report> reportList = dao.selectAll(Report.class);
+		List<Report> reportList = new ArrayList<Report>();
+
+		ReportModelMeta meta = ReportModelMeta.get();
+		List<ReportModel> reportModelList = Datastore.query(meta).asList();
+		if (reportModelList != null) {
+			for (ReportModel reportModel : reportModelList) {
+				reportList.add(new Report(reportModel));
+			}
+		}
 		return new JSONWithPadding(new GenericEntity<List<Report>>(reportList) {/* ignore */
 		}, callback);
 	}
@@ -51,8 +64,16 @@ public class ReportResource {
 	@Consumes({ MediaType.APPLICATION_JSON })
 	public Report createReport(Report report) {
 		log.info("post:" + report.getDate());
-		DAO dao = new DAO();
-		dao.save(report);
+		ReportModel reportModel = new ReportModel();
+		reportModel.setDate(report.getDate());
+		reportModel.setShopId(report.getShopId());
+		reportModel.setShopName(report.getShopName());
+		reportModel.setModelId(report.getModelId());
+		reportModel.setModelName(report.getModelName());
+		reportModel.setInvestment(report.getInvestment());
+		reportModel.setRealization(report.getRealization());
+		reportModel.setNumOfPeople(report.getNumOfPeople());
+		Datastore.put(reportModel);
 		return report;
 	}
 
@@ -61,9 +82,17 @@ public class ReportResource {
 	@Consumes({ MediaType.APPLICATION_JSON })
 	public void update(@PathParam("id") Long id, Report report) {
 		log.info("put:" + id + " " + report.getDate());
-		DAO dao = new DAO();
-		report.setId(id);
-		dao.save(report);
+		Key key = Datastore.createKey(ReportModel.class, id);
+		ReportModel reportModel = Datastore.get(ReportModel.class, key);
+		reportModel.setDate(report.getDate());
+		reportModel.setShopId(report.getShopId());
+		reportModel.setShopName(report.getShopName());
+		reportModel.setModelId(report.getModelId());
+		reportModel.setModelName(report.getModelName());
+		reportModel.setInvestment(report.getInvestment());
+		reportModel.setRealization(report.getRealization());
+		reportModel.setNumOfPeople(report.getNumOfPeople());
+		Datastore.put(reportModel);
 	}
 
 	@DELETE
@@ -71,7 +100,6 @@ public class ReportResource {
 	@Consumes({ MediaType.APPLICATION_JSON })
 	public void delete(@PathParam("id") Long id) {
 		log.info("delete:" + id);
-		DAO dao = new DAO();
-		dao.delete(Report.class, id);
+		Datastore.delete(Datastore.createKey(ReportModel.class, id));
 	}
 }

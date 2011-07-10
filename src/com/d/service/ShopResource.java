@@ -1,5 +1,6 @@
 package com.d.service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -16,8 +17,12 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 
-import com.d.dao.DAO;
+import org.slim3.datastore.Datastore;
+
 import com.d.domain.Shop;
+import com.d.meta.ShopModelMeta;
+import com.d.model.ShopModel;
+import com.google.appengine.api.datastore.Key;
 import com.sun.jersey.api.json.JSONWithPadding;
 
 @Path("/shops")
@@ -31,8 +36,9 @@ public class ShopResource {
 	public JSONWithPadding get(@PathParam("id") Long id,
 			@QueryParam("jsoncallback") @DefaultValue("fn") String callback) {
 		log.info("get:" + id);
-		DAO dao = new DAO();
-		Shop shop = dao.select(Shop.class, id);
+		Key key = Datastore.createKey(ShopModel.class, id);
+		ShopModel shopModel = Datastore.get(ShopModel.class, key);
+		Shop shop = new Shop(shopModel);
 		return new JSONWithPadding(shop, callback);
 	}
 
@@ -41,8 +47,15 @@ public class ShopResource {
 	public JSONWithPadding list(
 			@QueryParam("jsoncallback") @DefaultValue("fn") String callback) {
 		log.info("get all.");
-		DAO dao = new DAO();
-		List<Shop> shopList = dao.selectAll(Shop.class);
+		List<Shop> shopList = new ArrayList<Shop>();
+
+		ShopModelMeta meta = ShopModelMeta.get();
+		List<ShopModel> shopModelList = Datastore.query(meta).asList();
+		if (shopModelList != null) {
+			for (ShopModel shopModel : shopModelList) {
+				shopList.add(new Shop(shopModel));
+			}
+		}
 		return new JSONWithPadding(new GenericEntity<List<Shop>>(shopList) {/* ignore */
 		}, callback);
 	}
@@ -51,8 +64,10 @@ public class ShopResource {
 	@Consumes({ MediaType.APPLICATION_JSON })
 	public Shop createShop(Shop shop) {
 		log.info("post:" + shop.getName());
-		DAO dao = new DAO();
-		dao.save(shop);
+		ShopModel shopModel = new ShopModel();
+		shopModel.setConversionRatio(shop.getConversionRatio());
+		shopModel.setName(shop.getName());
+		Datastore.put(shopModel);
 		return shop;
 	}
 
@@ -61,9 +76,10 @@ public class ShopResource {
 	@Consumes({ MediaType.APPLICATION_JSON })
 	public void update(@PathParam("id") Long id, Shop shop) {
 		log.info("put:" + id + " " + shop.getName());
-		DAO dao = new DAO();
-		shop.setId(id);
-		dao.save(shop);
+		Key key = Datastore.createKey(ShopModel.class, id);
+		ShopModel shopModel = Datastore.get(ShopModel.class, key);
+		shopModel.setName(shop.getName());
+		Datastore.put(shopModel);
 	}
 
 	@DELETE
@@ -71,7 +87,6 @@ public class ShopResource {
 	@Consumes({ MediaType.APPLICATION_JSON })
 	public void delete(@PathParam("id") Long id) {
 		log.info("delete:" + id);
-		DAO dao = new DAO();
-		dao.delete(Shop.class, id);
+		Datastore.delete(Datastore.createKey(ShopModel.class, id));
 	}
 }

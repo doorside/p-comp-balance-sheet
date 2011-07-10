@@ -1,19 +1,19 @@
 package com.d.domain;
 
-import com.d.model.MakerModel;
+import com.d.model.SpecModel;
 
-public class Maker {
+public class Spec {
 
-	private long id = -1;
+	private long id;
 
-	private String name = "";
+	private String name;
 
-	public Maker() {
+	public Spec() {
 	}
 
-	public Maker(MakerModel makerModel) {
-		id = makerModel.getId().getId();
-		name = makerModel.getName();
+	public Spec(SpecModel modelTypeModel) {
+		this.id = modelTypeModel.getId().getId();
+		this.name = modelTypeModel.getName();
 	}
 
 	public long getId() {
@@ -31,5 +31,4 @@ public class Maker {
 	public void setName(String name) {
 		this.name = name;
 	}
-
 }

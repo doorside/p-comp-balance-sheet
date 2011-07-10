@@ -1,31 +1,22 @@
 package com.d.domain;
 
-import javax.jdo.annotations.IdGeneratorStrategy;
-import javax.jdo.annotations.IdentityType;
-import javax.jdo.annotations.PersistenceCapable;
-import javax.jdo.annotations.Persistent;
-import javax.jdo.annotations.PrimaryKey;
 
-@PersistenceCapable(identityType = IdentityType.APPLICATION)
 public class Model {
-	@PrimaryKey
-	@Persistent(valueStrategy = IdGeneratorStrategy.IDENTITY)
-	private Long id;
-	@Persistent
+	private long id;
 	private String name;
-	@Persistent
-	private Long makerId;
-
+	private long makerId;
 	private String makerName;
-	@Persistent
-	private Long modelTypeId;
-	private String modelTypeName;
+	private long specId;
+	private String specName;
 
-	public Long getId() {
+	public Model() {
+	}
+
+	public long getId() {
 		return id;
 	}
 
-	public void setId(Long id) {
+	public void setId(long id) {
 		this.id = id;
 	}
 
@@ -37,28 +28,28 @@ public class Model {
 		this.name = name;
 	}
 
-	public Long getMakerId() {
+	public long getMakerId() {
 		return makerId;
 	}
 
-	public void setMakerId(Long makerId) {
+	public void setMakerId(long makerId) {
 		this.makerId = makerId;
 	}
 
-	public Long getModelTypeId() {
-		return modelTypeId;
+	public long getSpecId() {
+		return specId;
 	}
 
-	public void setModelTypeId(Long typeId) {
-		this.modelTypeId = typeId;
+	public void setSpecId(long typeId) {
+		this.specId = typeId;
 	}
 
-	public String getModelTypeName() {
-		return modelTypeName;
+	public String getSpecName() {
+		return specName;
 	}
 
-	public void setModelTypeName(String typeName) {
-		this.modelTypeName = typeName;
+	public void setSpecName(String typeName) {
+		this.specName = typeName;
 	}
 
 	public String getMakerName() {

@@ -4,13 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="http://code.jquery.com/mobile/1.0b1/jquery.mobile-1.0b1.min.css" />
-<link rel="stylesheet" href="http://dev.jtsage.com/cdn/datebox/latest/jquery.mobile.datebox.min.css" /> 
 <script src="http://code.jquery.com/jquery-1.6.1.min.js"></script>
-<script>
-    $(document).bind( "mobileinit", function(){ $.mobile.page.prototype.options.degradeInputs.date = 'text'; });	
-</script>
 <script src="http://code.jquery.com/mobile/1.0b1/jquery.mobile-1.0b1.min.js"></script>
-<script src="http://dev.jtsage.com/cdn/datebox/latest/jquery.mobile.datebox.min.js"></script>
 <script src="/app/js/util.js"></script>
 
 <title>タイプメンテ</title>
@@ -19,78 +14,78 @@
 </style>
 <script>
 jQuery(document).ready(function() {
-	var selectModelTypes = function() {
+	var selectSpecs = function() {
         $.mobile.pageLoading();  
-	    jQuery('#modelTypeList').html('');
-		jQuery.getJSON("/resources/modelTypes?jsoncallback=?",
+	    jQuery('#specList').html('');
+		jQuery.getJSON("/resources/specs?jsoncallback=?",
 	        {},
 	        function(rows) {
-	            for (var i = 0, modelType; modelType = rows[i]; i++){
+	            for (var i = 0, spec; spec = rows[i]; i++){
 	                $('<li>')
-	                .html('<a data-identity="' + modelType.id + '" data-url="?id=' + modelType.id +'" href="javascript:void(0);">' + modelType.name + '</a>')
-	                .appendTo('#modelTypeList');
+	                .html('<a data-identity="' + spec.id + '" data-url="?id=' + spec.id +'" href="javascript:void(0);">' + spec.name + '</a>')
+	                .appendTo('#specList');
 	            }
-	            $('#modelTypeList').listview('refresh');
+	            $('#specList').listview('refresh');
 	            $.mobile.pageLoading(true);		
 	        });
 	};
-	$('div[id="maintListModelType"]').live("pageshow", function() {
-		selectModelTypes();
+	$('div[id="maintListSpec"]').live("pageshow", function() {
+		selectSpecs();
 	});
 	
-	$('div[id="maintListModelType"] ul[data-role="listview"] a').live("tap", function() {
+	$('div[id="maintListSpec"] ul[data-role="listview"] a').live("tap", function() {
 	    //var dataurl = $(this).attr("data-url");
-	    $('#modelTypeId').val($(this).attr("data-identity"));
-	    $.mobile.changePage("#maintModelType");
+	    $('#specId').val($(this).attr("data-identity"));
+	    $.mobile.changePage("#maintSpec");
 	    //if (dataurl != null) {
-	    //    $.mobile.changePage("maintModelType.htm" + dataurl);
+	    //    $.mobile.changePage("maintSpec.htm" + dataurl);
 	   // }
 	});	
 	
-	$('div[id="maintModelType"]').live("pageshow", function() {
+	$('div[id="maintSpec"]').live("pageshow", function() {
         $.mobile.pageLoading();
-    	jQuery.getJSON("/resources/modelTypes/" + $('#modelTypeId').val() + "?jsoncallback=?",
+    	jQuery.getJSON("/resources/specs/" + $('#specId').val() + "?jsoncallback=?",
     	        {},
     	        function(row) {
-    	        	$('#modelTypeName').val(row.name);
+    	        	$('#specName').val(row.name);
     	            $.mobile.pageLoading(true);		
     	        }
     	 );
 	});
 
-	jQuery('#addModelType').bind('tap', function() {
-		 $('#modelTypeId').val('');
-		 $('#modelTypeName').val('');
+	jQuery('#addSpec').bind('tap', function() {
+		 $('#specId').val('');
+		 $('#specName').val('');
 	});
 	
-	jQuery('#modelTypeSave').bind('tap', function() {
-		 var modelType = { id: $('#modelTypeId').val(),
-		 name : $('#modelTypeName').val()}
-		if (modelType.id) {
-			updateModelType(modelType);
+	jQuery('#specSave').bind('tap', function() {
+		 var spec = { id: $('#specId').val(),
+		 name : $('#specName').val()}
+		if (spec.id) {
+			updateSpec(spec);
 		} else {
-			insertModelType(modelType);
+			insertSpec(spec);
 		}
 	});
-	jQuery('#modelTypeDelete').bind('tap', function() {
-		deleteModelType({id: $('#modelTypeId').val()});
+	jQuery('#specDelete').bind('tap', function() {
+		deleteSpec({id: $('#specId').val()});
 	});
 });
-var insertModelType = function(modelType) {
+var insertSpec = function(spec) {
     $.mobile.pageLoading();  
 
     jQuery.ajax({ 
-        url: "/resources/modelTypes",
+        url: "/resources/specs",
         type: "POST",
         contentType: 'application/json',
         dataType: 'json',
         data:JSON.stringify({
-        	"name":modelType.name
+        	"name":spec.name
   	  	}),
         success: function(data, dataType) {
-   			$('#modelTypeId').val(data.id);
+   			$('#specId').val(data.id);
    	        $.mobile.pageLoading(true);		
-        	$.mobile.changePage( "#modelTypeMsgDialog", {
+        	$.mobile.changePage( "#specMsgDialog", {
         		transition: "pop",
         		reverse: false,
         		changeHash: false
@@ -103,21 +98,21 @@ var insertModelType = function(modelType) {
     });
 };
 
-var updateModelType = function(modelType) {
+var updateSpec = function(spec) {
     $.mobile.pageLoading();  
 
     jQuery.ajax({ 
-	    url:"/resources/modelTypes/" + modelType.id,
+	    url:"/resources/specs/" + spec.id,
 	    type: "PUT",
 	    contentType: 'application/json',
 	    dataType: 'json',
 	    data:JSON.stringify({
-        	"name":modelType.name
+        	"name":spec.name
 		}),
         success: function(data, dataType) {
             $.mobile.pageLoading(true);		
         	console.dir(data);
-        	$.mobile.changePage( "#modelTypeMsgDialog", {
+        	$.mobile.changePage( "#specMsgDialog", {
         		transition: "pop",
         		reverse: false,
         		changeHash: false
@@ -130,11 +125,11 @@ var updateModelType = function(modelType) {
     });
 };
 
-var deleteModelType = function(modelType) {
+var deleteSpec = function(spec) {
     $.mobile.pageLoading();  
 
     jQuery.ajax({ 
-	    url:"/resources/modelTypes/" + modelType.id,
+	    url:"/resources/specs/" + spec.id,
 	    type: "DELETE",
 	    contentType: 'application/json',
 	    dataType: 'json',
@@ -142,7 +137,7 @@ var deleteModelType = function(modelType) {
         success: function(data, dataType) {
             $.mobile.pageLoading(true);		
     		console.dir(data);
-        	$.mobile.changePage( "#modelTypeMsgDialog", {
+        	$.mobile.changePage( "#specMsgDialog", {
         		transition: "pop",
         		reverse: false,
         		changeHash: false
@@ -158,35 +153,35 @@ var deleteModelType = function(modelType) {
 </script>
 </head>
 <body>
-<div data-role="page" id="maintListModelType">
+<div data-role="page" id="maintListSpec">
     <div data-role="header" data-position="fixed" >
 		<a class="ui-btn-left" href="../start.html#maint" data-direction="reverse" rel="external">Back</a>
     	<H1>タイプ一覧</h1>
-		<a class="ui-btn-right" href="#maintModelType" data-icon="plus" id="addModelType">Add</a>
+		<a class="ui-btn-right" href="#maintSpec" data-icon="plus" id="addSpec">Add</a>
     </div><!-- /header -->
     <div data-role="content">
 		<fieldset data-role="fieldcontain">
-	    	<ul id="modelTypeList" data-role="listview" ></ul>
+	    	<ul id="specList" data-role="listview" ></ul>
 	    </fieldset>
     </div><!-- /content -->
 </div><!-- /page -->
-<div data-role="page" id="maintModelType" data-add-back-btn="true">
+<div data-role="page" id="maintSpec" data-add-back-btn="true">
 	<div data-role="header">
-		<a class="ui-btn-left" href="#maintListModelType" data-direction="reverse">Back</a>
+		<a class="ui-btn-left" href="#maintListSpec" data-direction="reverse">Back</a>
 		<h1>タイプメンテ</h1>
 	</div><!-- /header -->
 	<div data-role="content">	
 		<fieldset data-role="fieldcontain">
-			<input type="hidden"  id="modelTypeId">
-	    	<input type="text" placeholder="名前" id="modelTypeName">
+			<input type="hidden"  id="specId">
+	    	<input type="text" placeholder="名前" id="specName">
 		</fieldset>
 		<fieldset class="ui-grid-a">
-      		<a data-role="button" id="modelTypeSave">save</a>
-      		<a data-role="button" id="modelTypeDelete">delete</a>
+      		<a data-role="button" id="specSave">save</a>
+      		<a data-role="button" id="specDelete">delete</a>
 		</fieldset>
 	</div><!-- /content -->
 </div><!-- /page --> 
-<div id="modelTypeMsgDialog" data-role="page">
+<div id="specMsgDialog" data-role="page">
   <div data-role="header">
   	<h1>message</h1>
   </div>
