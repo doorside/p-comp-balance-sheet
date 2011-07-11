@@ -57,8 +57,8 @@ public class ModelResource {
 					modelModel.getSpecId());
 			SpecModel specModel = Datastore.get(SpecModel.class, specKey);
 			if (specModel != null) {
-				model.setMakerId(specModel.getId().getId());
-				model.setMakerName(specModel.getName());
+				model.setSpecId(specModel.getId().getId());
+				model.setSpecName(specModel.getName());
 			}
 		}
 		return new JSONWithPadding(model, callback);

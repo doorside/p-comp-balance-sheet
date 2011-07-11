@@ -10,36 +10,202 @@
 <link rel="stylesheet" href="http://dev.jtsage.com/cdn/datebox/latest/jquery.mobile.datebox.min.css" /> 
 <script src="http://code.jquery.com/jquery-1.6.1.min.js"></script>
 <script>
-    $( document ).bind( "mobileinit", function(){ $.mobile.page.prototype.options.degradeInputs.date = 'text'; });	
+    $(document).bind( "mobileinit", function(){ $.mobile.page.prototype.options.degradeInputs.date = 'text'; });	
 </script>
 <script src="http://code.jquery.com/mobile/1.0b1/jquery.mobile-1.0b1.min.js"></script>
 <script src="http://dev.jtsage.com/cdn/datebox/latest/jquery.mobile.datebox.min.js"></script>
-
 <title>収支表</title>
-<style>
+<script>
+jQuery(document).ready(function() {
+	// 店舗選択 一覧
+	$('div[id="selectShop"]').live("pageshow", function() {
+	    $.mobile.pageLoading();  
+	    jQuery('#shopList').html('');
+		jQuery.getJSON("/resources/shops?jsoncallback=?",
+	        {},
+	        function(rows) {
+	            for (var i = 0, shop; shop = rows[i]; i++){
+	                $('<li>')
+	                .html('<a data-identity="' + shop.id + '" data-url="?id=' + shop.id +'" href="javascript:void(0);">' + shop.name + ' ' + shop.conversionRatio + '</a>')
+	                .appendTo('#shopList');
+	            }
+	            $('#shopList').listview('refresh');
+	            $.mobile.pageLoading(true);		
+	        });
+	});
+	// 店舗選択 1件選択
+	$('div[id="selectShop"] ul[data-role="listview"] a').live("tap", function() {
+		$('#selectShop').data('no-reflesh', true);
+	    var $this = $(this);
+	    $('#shopId').val($this.attr("data-identity"));
+	    $('#shopName').text($this.text());
+	    $.mobile.changePage("#input", {reverse : true});
+	});	
+	// 機種選択 一覧
+	$('div[id="selectModel"]').live("pageshow", function() {
+	    $.mobile.pageLoading();  
+	    jQuery('#modelList').html('');
+		jQuery.getJSON("/resources/models?jsoncallback=?",
+	        {},
+	        function(rows) {
+	            for (var i = 0, model; model = rows[i]; i++){
+	                $('<li>')
+	                .html('<a data-identity="' + model.id + '" data-url="?id=' + model.id +'" href="javascript:void(0);">' + model.name + '</a>')
+	                .appendTo('#modelList');
+	            }
+	            $('#modelList').listview('refresh');
+	            $.mobile.pageLoading(true);		
+	        });
+	});
+	// 店舗選択 1件選択
+	$('div[id="selectModel"] ul[data-role="listview"] a').live("tap", function() {
+		$('#selectModel').data('no-reflesh', true);
+	    var $this = $(this);
+	    $('#modelId').val($this.attr("data-identity"));
+	    $('#modelName').text($this.text());
+	    $.mobile.changePage("#input", {reverse : true});
+	});
+	
+	
+	// save
+	jQuery('#reportSave').bind('tap',function() {
+		 var report = { 
+			 id: '', //TODO $('#reportId').val(),
+			 date : $('#date').val(),
+			 shopId : $('#shopId').val(),
+			 modelId : $('#modelId').val(),
+			 investment : $('#investment').val(),
+			 realization : $('#realization').val(),
+			 numOfPeople : $('#numOfPeople').val()
+		 };
+	    $.mobile.pageLoading();  
+		if (report.id) {
+			// 更新
+		    jQuery.ajax({ 
+			    url:"/resources/reports/" + report.id,
+			    type: "PUT",
+			    contentType: 'application/json',
+			    dataType: 'json',
+			    data:JSON.stringify(report),
+		        success: function(data, dataType) {
+		            $.mobile.pageLoading(true);		
+		        	console.dir(data);
+		        	$.mobile.changePage( "#reportMsgDialog", {
+		        		transition: "pop",
+		        		reverse: false,
+		        		changeHash: false
+		        	});	
+		        },
+		        error:function (result) {
+		        	alert(result);
+		            $.mobile.pageLoading(true);		
+		        } 
+		    });
+		} else {
+			// 登録
+		    jQuery.ajax({ 
+		        url: "/resources/reports",
+		        type: "POST",
+		        contentType: 'application/json',
+		        dataType: 'json',
+		        data:JSON.stringify(report),
+		        success: function(data, dataType) {
+		   			//TODO $('#makerId').val(data.id);
+		   	        $.mobile.pageLoading(true);		
+		        	$.mobile.changePage( "#reportMsgDialog", {
+		        		transition: "pop",
+		        		reverse: false,
+		        		changeHash: false
+		        	});	
+		        },
+		        error:function (result) {
+		        	alert(result);
+		            $.mobile.pageLoading(true);		
+		        } 
+		    });
+		}
+	});
+	// delete
+	jQuery('#reportDelete').bind('tap',function() {
+		var maekr = {id: $('#reportId').val()};
+	    $.mobile.pageLoading();  
+	    jQuery.ajax({ 
+		    url:"/resources/reports/" + maker.id,
+		    type: "DELETE",
+		    contentType: 'application/json',
+		    dataType: 'json',
+		    data:{},
+	        success: function(data, dataType) {
+	            $.mobile.pageLoading(true);		
+	    		console.dir(data);
+	        	$.mobile.changePage( "#makerMsgDialog", {
+	        		transition: "pop",
+	        		
+	        		reverse: false,
+	        		changeHash: false
+	        	});	
+	        },
+	        error:function (result) {
+	            $.mobile.pageLoading(true);		
+	    		alert(result);
+	        } 
+	    });
+	});
+	
+	
+	$('div[id="reportList"]').live("pageshow", function() {
+		var d = new Date();
+    	$('#dayList').append('<li data-role="list-divider">'+ (d.getMonth() + 1) +'月</li>');
+    	var m = d.getMonth();
+    	d.setTime(0);
+    	d.setMonth(d);
+    	d.setDate(0);
+		for (var i = 1; i <= d.getDate(); i++) {
+        	$('<li>')
+        	.html('<a data-identity="' + i + '" href="javascript:void(0);">' + i + '</a>')
+        	.appendTo('#dayList');
+		}
+        $('#dayList').listview('refresh');
+	});
 
-</style>
+});
+
+</script>
 </head>
 <body>
-<div data-role="page" id="input" data-theme="a">
-	<div data-role="header"> 
+
+
+<div data-role="page" id="home">
+	<div data-role="header"><h1>HOME</h1></div>
+	<div data-role="content">
+		<ul data-role="listview" data-inset="true">
+			<li><a href="#input" data-icon="plus" data-iconpos="top">登録　</a></li>
+			<li><a href="#amount"  data-icon="grid" data-iconpos="top">集計</a></li>
+			<li><a href="#maint" data-icon="gear" data-iconpos="top">メンテ</a></li>
+		</ul>
+	</div>
+</div>
+
+
+<div data-role="page" id="input" data-theme="">
+	<div data-role="header">
+ 		<a class="ui-btn-left" href="#home" data-direction="reverse" >Back</a>
+ 		<h1>登録</h1>
+		<a class="ui-btn-right" href="#reportList" data-icon="grid" id="reportListBtn" data-transition="flip">一覧</a>
 	</div> 
 	<div data-role="content"> 
 		<fieldset data-role="fieldcontain">
 		    <label for="number" >日付:</label>
-		    <input name="mydate" placeholder="日付" id="mydate" type="date" data-role="datebox"
-			   data-options='{"mode": "calbox"}'  data-theme="a">
+		    <input placeholder="日付" name="date" id="date" type="date" data-role="datebox"
+			   data-options='{"mode": "calbox"}'  data-theme="b">
 		</fieldset>
 		<fieldset data-role="fieldcontain">
-	      <input type="text" placeholder="店舗" id="shopName" readonly>
-	      <input type="text" placeholder="換金率" id="shopName" readonly>
-	      <a href="/app/html/shop.html" data-rel="dialog">店舗</a>
-	      <input type="hidden" id="shopId">
-		</fieldset>
-		<fieldset data-role="fieldcontain">
-	      <input type="text" placeholder="機種" id="modelName" readonly>
-	      <a href="/app/html/model.html" data-rel="dialog">機種</a>
-	      <input type="hidden" id="modelId">
+			<input type="hidden" id="shopId" />
+			<input type="hidden" id="modelId" />
+			<ul data-role="listview" data-inset="true">
+				<li><a href="#selectShop" id="shopName">店舗</a></li>
+				<li><a href="#selectModel" id="modelName">機種</a></li>
+			</ul>
 		</fieldset>
 		<fieldset data-role="fieldcontain">
 		  <label for="investment" >投資金額:</label>
@@ -54,40 +220,76 @@
 	      <input type="number" placeholder="人数" id="numOfPeople" name="numOfPeople">
 		</fieldset>
 		<fieldset class="ui-grid-a">
-		  <div class="ui-block-a"><button type="submit" data-theme="c">Cancel</button></div>
-		  <div class="ui-block-b"><button type="submit" data-theme="b">Submit</button></div>	   
+		  <div class="ui-block-b"><button type="submit" data-theme="b" id="reportSave">登録</button></div>	   
 		</fieldset>
 	</div> 
-	<div data-role="footer" data-position="fixed" class="custom-opacity" data-id="search-menu">
-		<div data-role="navbar">
-			<ul>
-				<li><a href="#input" data-icon="plus" data-iconpos="top">追加</a></li>
-				<li><a href="#amount"  data-icon="grid" data-iconpos="top">集計</a></li>
-				<li><a href="#maint" data-icon="gear" data-iconpos="top">メンテ</a></li>
-			</ul>
-		</div>
-	</div>
 </div>
 
+<div data-role="page" id="selectShop" data-add-back-btn="true">
+	<div data-role="header">
+		<a class="ui-btn-left" href="#input" data-direction="reverse">Back</a>
+		<h1>店舗選択</h1>
+	</div><!-- /header -->
+	<div data-role="content">	
+		<fieldset data-role="fieldcontain">
+	    	<ul id="shopList" data-role="listview" ></ul>
+	    </fieldset>
+	</div><!-- /content -->
+</div><!-- /page --> 
+
+<div data-role="page" id="selectModel" data-add-back-btn="true">
+	<div data-role="header">
+		<a class="ui-btn-left" href="#input" data-direction="reverse">Back</a>
+		<h1>機種選択</h1>
+	</div><!-- /header -->
+	<div data-role="content">	
+		<fieldset data-role="fieldcontain">
+	    	<ul id="modelList" data-role="listview" ></ul>
+	    </fieldset>
+	</div><!-- /content -->
+</div><!-- /page --> 
+<div id="reportMsgDialog" data-role="page">
+  <div data-role="header">
+  	<h1>message</h1>
+  </div>
+  <div data-role="content" class="content">
+    <p>完了</p>
+		<fieldset class="ui-grid-a">
+      		<a data-role="button" href="#input" data-direction="reverse">back</a>
+		</fieldset>
+  </div>
+</div>
+
+<div data-role="page" id="reportList" data-add-back-btn="true">
+	<div data-role="header">
+		<a class="ui-btn-left" href="#input" data-direction="reverse" data-transition="flip">Back</a>
+		<h1></h1>
+	</div><!-- /header -->
+	<div data-role="content">	
+		<fieldset data-role="fieldcontain">			
+	    	<ul id="dayList" data-role="listview" data-inset="false">
+			</ul>	    	
+	    </fieldset>
+	</div><!-- /content -->
+</div><!-- /page --> 
+
+
 <div data-role="page" id="amount">
-	<div data-role="header"><h1>集計</h1></div>
+	<div data-role="header">
+ 		<a class="ui-btn-left" href="#home" data-direction="reverse" >Back</a>
+		<h1>集計</h1>
+	</div>
 	<div data-role="content">
 		<ul data-role="listview" data-inset="true">
 		</ul>
 	</div>
-	<div data-role="footer" data-position="fixed" class="custom-opacity" data-id="search-menu">
-		<div data-role="navbar">
-			<ul>
-				<li><a href="#input" data-icon="plus" data-iconpos="top" >追加</a></li>
-				<li><a href="#amount"  data-icon="grid" data-iconpos="top" >集計</a></li>
-				<li><a href="#maint" data-icon="gear" data-iconpos="top" >メンテ</a></li>
-			</ul>
-		</div>
-	</div>
 </div>
 
 <div data-role="page" id="maint">
-	<div data-role="header"><h1>メンテ</h1></div>
+	<div data-role="header">
+		<a class="ui-btn-left" href="#home" data-direction="reverse" >Back</a>
+		<h1>メンテ</h1>
+	</div>
 	<div data-role="content">
 		<ul data-role="listview" data-inset="true">
 			<li><a href="maint/maintShop.html" rel="external">店舗</a></li>
@@ -95,15 +297,6 @@
 			<li><a href="maint/maintSpec.html" rel="external">型</a></li>
 			<li><a href="maint/maintModel.html" rel="external">機種</a></li>
 		</ul>
-	</div>
-	<div data-role="footer" data-position="fixed" class="custom-opacity" data-id="search-menu">
-		<div data-role="navbar">
-			<ul>
-				<li><a href="#input" data-icon="plus" data-iconpos="top" >追加</a></li>
-				<li><a href="#amount"  data-icon="grid" data-iconpos="top" >集計</a></li>
-				<li><a href="#maint" data-icon="gear" data-iconpos="top" >メンテ</a></li>
-			</ul>
-		</div>
 	</div>
 </div>
 </body>

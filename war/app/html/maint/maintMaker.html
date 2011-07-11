@@ -8,13 +8,10 @@
 <script src="http://code.jquery.com/mobile/1.0b1/jquery.mobile-1.0b1.min.js"></script>
 <script src="/app/js/util.js"></script>
 <title>メーカー選択</title>
-<style>
-
-</style>
 <script>
-
 jQuery(document).ready(function() {
-	var selectMakers = function() {
+	// show list
+	$('div[id="maintListMaker"]').live("pageshow", function() {
         $.mobile.pageLoading();  
 	    jQuery('#makerList').html('');
 		jQuery.getJSON("/resources/makers?jsoncallback=?",
@@ -28,9 +25,6 @@ jQuery(document).ready(function() {
 	            $('#makerList').listview('refresh');
 	            $.mobile.pageLoading(true);		
 	        });
-	};
-	$('div[id="maintListMaker"]').live("pageshow", function() {
-		selectMakers();
 	});
 	
 	$('div[id="maintListMaker"] ul[data-role="listview"] a').live("tap", function() {
@@ -41,7 +35,8 @@ jQuery(document).ready(function() {
 	    //    $.mobile.changePage("maintMaker.htm" + dataurl);
 	   // }
 	});	
-	
+
+	// select one	
 	$('div[id="maintMaker"]').live("pageshow", function() {
         $.mobile.pageLoading();
     	jQuery.getJSON("/resources/makers/" + $('#makerId').val() + "?jsoncallback=?",
@@ -52,103 +47,92 @@ jQuery(document).ready(function() {
     	        }
     	 );
 	});
-
+	// register
 	jQuery('#addMaker').bind('tap', function() {
 		 $('#makerId').val('');
 		 $('#makerName').val('');
 	});
-	
+	// save
 	jQuery('#makerSave').bind('tap',function() {
 		 var maker = { id: $('#makerId').val(),
 		 name : $('#makerName').val()}
+	    $.mobile.pageLoading();  
 		if (maker.id) {
-			updateMaker(maker);
+			// 更新
+		    jQuery.ajax({ 
+			    url:"/resources/makers/" + maker.id,
+			    type: "PUT",
+			    contentType: 'application/json',
+			    dataType: 'json',
+			    data:JSON.stringify({
+		        	"name":maker.name
+				}),
+		        success: function(data, dataType) {
+		            $.mobile.pageLoading(true);		
+		        	console.dir(data);
+		        	$.mobile.changePage( "#makerMsgDialog", {
+		        		transition: "pop",
+		        		reverse: false,
+		        		changeHash: false
+		        	});	
+		        },
+		        error:function (result) {
+		        	alert(result);
+		            $.mobile.pageLoading(true);		
+		        } 
+		    });
 		} else {
-			insertMaker(maker);
+			// 登録
+		    jQuery.ajax({ 
+		        url: "/resources/makers",
+		        type: "POST",
+		        contentType: 'application/json',
+		        dataType: 'json',
+		        data:JSON.stringify({
+		        	"name":maker.name
+		  	  	}),
+		        success: function(data, dataType) {
+		   			$('#makerId').val(data.id);
+		   	        $.mobile.pageLoading(true);		
+		        	$.mobile.changePage( "#makerMsgDialog", {
+		        		transition: "pop",
+		        		reverse: false,
+		        		changeHash: false
+		        	});	
+		        },
+		        error:function (result) {
+		        	alert(result);
+		            $.mobile.pageLoading(true);		
+		        } 
+		    });
 		}
 	});
+	// delete
 	jQuery('#makerDelete').bind('tap',function() {
-		deleteMaker({id: $('#makerId').val()});
+		var maekr = {id: $('#makerId').val()};
+	    $.mobile.pageLoading();  
+	    jQuery.ajax({ 
+		    url:"/resources/makers/" + maker.id,
+		    type: "DELETE",
+		    contentType: 'application/json',
+		    dataType: 'json',
+		    data:{},
+	        success: function(data, dataType) {
+	            $.mobile.pageLoading(true);		
+	    		console.dir(data);
+	        	$.mobile.changePage( "#makerMsgDialog", {
+	        		transition: "pop",
+	        		reverse: false,
+	        		changeHash: false
+	        	});	
+	        },
+	        error:function (result) {
+	            $.mobile.pageLoading(true);		
+	    		alert(result);
+	        } 
+	    });
 	});
 });
-var insertMaker = function(maker) {
-    $.mobile.pageLoading();  
-
-    jQuery.ajax({ 
-        url: "/resources/makers",
-        type: "POST",
-        contentType: 'application/json',
-        dataType: 'json',
-        data:JSON.stringify({
-        	"name":maker.name
-  	  	}),
-        success: function(data, dataType) {
-   			$('#makerId').val(data.id);
-   	        $.mobile.pageLoading(true);		
-        	$.mobile.changePage( "#makerMsgDialog", {
-        		transition: "pop",
-        		reverse: false,
-        		changeHash: false
-        	});	
-        },
-        error:function (result) {
-        	alert(result);
-            $.mobile.pageLoading(true);		
-        } 
-    });
-};
-
-var updateMaker = function(maker) {
-    $.mobile.pageLoading();  
-
-    jQuery.ajax({ 
-	    url:"/resources/makers/" + maker.id,
-	    type: "PUT",
-	    contentType: 'application/json',
-	    dataType: 'json',
-	    data:JSON.stringify({
-        	"name":maker.name
-		}),
-        success: function(data, dataType) {
-            $.mobile.pageLoading(true);		
-        	console.dir(data);
-        	$.mobile.changePage( "#makerMsgDialog", {
-        		transition: "pop",
-        		reverse: false,
-        		changeHash: false
-        	});	
-        },
-        error:function (result) {
-        	alert(result);
-            $.mobile.pageLoading(true);		
-        } 
-    });
-};
-
-var deleteMaker = function(maker) {
-    $.mobile.pageLoading();  
-
-    jQuery.ajax({ 
-	    url:"/resources/makers/" + maker.id,
-	    type: "DELETE",
-	    contentType: 'application/json',
-	    dataType: 'json',
-	    data:{},
-        success: function(data, dataType) {
-            $.mobile.pageLoading(true);		
-    		console.dir(data);
-        	$.mobile.changePage( "#makerMsgDialog", {
-        		transition: "pop",
-        		reverse: false,
-        		changeHash: false
-        	});	
-        },
-        error:function (result) {
-            $.mobile.pageLoading(true);		
-    		alert(result);
-        } 
-    });
-};
 
 </script>
 </head>
@@ -192,9 +176,6 @@ var deleteMaker = function(maker) {
       		<a data-role="button" data-rel="back">back</a>
 		</fieldset>
   </div>
-  <!-- 
-  <footer data-role="footer"><h1></h1></footer>
-   -->
 </div>
 </body>
 </html>
