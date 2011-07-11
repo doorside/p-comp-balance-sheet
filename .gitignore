@@ -1,3 +1,4 @@
-war/WEB-INF/classes/*
-war/WEB-INF/appengine-generated/*
-test/WEB-INF/appengine-generated/*
+src/com/d/meta/
+war/WEB-INF/classes/
+war/WEB-INF/appengine-generated/
+test/WEB-INF/appengine-generated/
